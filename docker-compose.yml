@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  videoserver:
+    image: tiangolo/nginx-rtmp
+    ports:
+    - "80:80"
+    - "1935:1935"
+    networks:
+      video_net:
+    stdin_open: true
+    deploy:
+      restart_policy:
+        condition: any
+  videostreamer:
+    depends_on:
+    - videoserver
+    image: jrottenberg/ffmpeg
+    volumes:
+    - ./video:/video
+    command: -re -i /video/'Big_Buck_Bunny_1080_10s_1MB.mp4' -vcodec copy -loop -1 -c:a aac -b:a 160k -ar 44100 -strict -2 -f flv rtmp://videoserver/live/my_url
+    networks:
+      video_net:
+    deploy:
+      restart_policy:
+        condition: any
+networks:
+  video_net:
